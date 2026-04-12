@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AR Projesi</title>
+  <title>Atatürk AR Projesi</title>
   
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+
   <style>
     body, html { 
       margin: 0; 
@@ -12,10 +15,9 @@
       width: 100%; 
       height: 100%; 
       overflow: hidden; 
-      background-color: #333; /* Kamera açılana kadar koyu arka plan */
     }
     
-    /* Sağ Üstteki Sürüm Log Kutusu */
+    /* Sürüm Log Kutusu */
     #version-log {
       position: fixed;
       top: 10px;
@@ -30,7 +32,7 @@
       border: 1px solid #555;
     }
 
-    /* Alt Kısımdaki Geliştirici İmzası */
+    /* Geliştirici İmzası */
     #developer-tag {
       position: fixed;
       bottom: 10px;
@@ -47,16 +49,90 @@
 <body>
 
   <div id="version-log">
-    v1.0.0 - Altyapı oluşturuldu
+    v1.1.0 - AR Altyapısı ve Model Eklendi
   </div>
 
-  <div style="color: white; text-align: center; margin-top: 50px; font-family: sans-serif;">
-    Kamera ve 3D Model Altyapısı Bekleniyor...
-  </div>
-  
+  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; filterMinCF: 0.001; filterBeta: 0.01" 
+           color-space="sRGB" 
+           renderer="colorManagement: true, physicallyCorrectLights" 
+           vr-mode-ui="enabled: false" 
+           device-orientation-permission-ui="enabled: false">
+           
+    <a-assets>
+      <a-asset-item id="ataturkModel" src="./ataturk.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
+      
+      <a-gltf-model id="ataturkEntity"
+                    src="#ataturkModel" 
+                    position="0 -0.5 0" 
+                    scale="0 0 0" 
+                    rotation="0 0 0"
+                    visible="false">
+      </a-gltf-model>
+      
+    </a-entity>
+  </a-scene>
+
   <div id="developer-tag">
     Geliştirici: Furkan Çilesiz
   </div>
 
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const target = document.querySelector('#ar-target');
+      const ataturkEntity = document.querySelector('#ataturkEntity');
+      let displayTimer;
+
+      // Kamera anahtarlığı gördüğünde çalışacak kodlar
+      target.addEventListener("targetFound", () => {
+        console.log("Anahtarlık Algılandı!");
+        
+        // Modeli görünür yap
+        ataturkEntity.setAttribute('visible', 'true');
+        
+        // 3D modellerde şeffaflık (opacity) ayarı bazen kaplamaları bozduğu için,
+        // modeli yoktan var eder gibi yavaşça büyütme (scale) taktiği kullanıyoruz.
+        ataturkEntity.setAttribute('animation__appear', {
+          property: 'scale',
+          from: '0 0 0',
+          to: '0.5 0.5 0.5', /* Modelin orijinal boyutu, gerekirse bu rakamları artırıp azaltabilirsin */
+          dur: 2000,         /* 2 saniyede yavaşça ortaya çıkar */
+          easing: 'easeOutElastic' /* Hafif esnek bir çıkış efekti */
+        });
+
+        // Modeli ekranda 8 saniye tut ve sonra yok et
+        clearTimeout(displayTimer);
+        displayTimer = setTimeout(() => {
+          
+          // Yavaşça küçülerek kaybolma efekti
+          ataturkEntity.setAttribute('animation__disappear', {
+            property: 'scale',
+            from: '0.5 0.5 0.5',
+            to: '0 0 0',
+            dur: 2000, /* 2 saniyede küçülür */
+            easing: 'easeInOutQuad'
+          });
+          
+          // Küçülme bitince tamamen sahneden kaldır
+          setTimeout(() => {
+             ataturkEntity.setAttribute('visible', 'false');
+          }, 2000);
+
+        }, 8000); // 8000 milisaniye = 8 saniye
+      });
+
+      // Kamera anahtarlığı gözden kaybederse anında gizle
+      target.addEventListener("targetLost", () => {
+        console.log("Anahtarlık Kaybedildi!");
+        clearTimeout(displayTimer);
+        ataturkEntity.setAttribute('visible', 'false');
+        ataturkEntity.setAttribute('scale', '0 0 0');
+      });
+    });
+  </script>
 </body>
 </html>
