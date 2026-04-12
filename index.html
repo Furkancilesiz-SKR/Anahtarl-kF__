@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AR Projesi</title>
+  
+  <style>
+    body, html { 
+      margin: 0; 
+      padding: 0; 
+      width: 100%; 
+      height: 100%; 
+      overflow: hidden; 
+      background-color: #333; /* Kamera açılana kadar koyu arka plan */
+    }
+    
+    /* Sağ Üstteki Sürüm Log Kutusu */
+    #version-log {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00ff00;
+      padding: 10px;
+      border-radius: 8px;
+      font-family: monospace;
+      z-index: 1000;
+      font-size: 12px;
+      border: 1px solid #555;
+    }
+
+    /* Alt Kısımdaki Geliştirici İmzası */
+    #developer-tag {
+      position: fixed;
+      bottom: 10px;
+      width: 100%;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      z-index: 1000;
+      font-family: sans-serif;
+      font-size: 14px;
+      text-shadow: 1px 1px 2px black;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="version-log">
+    v1.0.0 - Altyapı oluşturuldu
+  </div>
+
+  <div style="color: white; text-align: center; margin-top: 50px; font-family: sans-serif;">
+    Kamera ve 3D Model Altyapısı Bekleniyor...
+  </div>
+  
+  <div id="developer-tag">
+    Geliştirici: Esmanur Çaça
+  </div>
+
+</body>
+</html>
