@@ -42,13 +42,32 @@
       font-size: 14px;
       text-shadow: 1px 1px 2px black;
     }
+
+    /* Ekrana dokunma uyarısı */
+    #tap-to-play {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 0, 0, 0.8);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-family: sans-serif;
+      font-size: 18px;
+      z-index: 2000;
+      cursor: pointer;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
 
   <div id="version-log">
-    v2.0.0 - Video AR Moduna Geçildi
+    v2.1.0 - Video Oynatma Düzeltmesi
   </div>
+
+  <div id="tap-to-play">Sesi Açmak ve Videoyu Başlatmak İçin<br>Ekrana Dokunun</div>
 
   <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true;" 
            color-space="sRGB" 
@@ -57,15 +76,13 @@
            device-orientation-permission-ui="enabled: false">
            
     <a-assets>
-      <video id="ataturk-vid" src="./ataturk.mp4" preload="auto" response-type="arraybuffer" loop crossorigin webkit-playsinline playsinline></video>
+      <video id="ataturk-vid" src="./ataturk.mp4" preload="auto" autoplay loop crossorigin="anonymous" playsinline webkit-playsinline muted></video>
     </a-assets>
 
     <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
     <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
-      
       <a-video src="#ataturk-vid" position="0 0 0" height="1" width="1.77" rotation="0 0 0"></a-video>
-      
     </a-entity>
   </a-scene>
 
@@ -77,22 +94,23 @@
     document.addEventListener("DOMContentLoaded", function() {
       const target = document.querySelector('#ar-target');
       const vid = document.querySelector('#ataturk-vid');
+      const tapBtn = document.querySelector('#tap-to-play');
 
-      // Kullanıcının ekrana dokunmasıyla ses kısıtlamasını kaldırmak için ufak bir tetikleyici
+      // Ekrana herhangi bir yere dokunulduğunda sesi aç ve uyarıyı gizle
       document.body.addEventListener('click', () => {
-        vid.muted = false;
-      }, { once: true });
-
-      // Kamera logoyu gördüğünde
-      target.addEventListener("targetFound", () => {
-        console.log("Logo Algılandı, Video Başlıyor!");
-        vid.play(); // Videoyu oynat
+        vid.muted = false; // Sesi aç
+        vid.play();        // Videoyu tetikle
+        tapBtn.style.display = 'none'; // Kırmızı butonu sakla
       });
 
-      // Kamera logoyu kaybettiğinde
+      target.addEventListener("targetFound", () => {
+        console.log("Logo Algılandı!");
+        vid.play(); 
+      });
+
       target.addEventListener("targetLost", () => {
-        console.log("Logo Gözden Kayboldu, Video Durduruluyor!");
-        vid.pause(); // Videoyu duraklat
+        console.log("Logo Kaybedildi!");
+        vid.pause(); 
       });
     });
   </script>
