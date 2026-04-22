@@ -3,75 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Atatürk AR Sergisi — Küçükçekmece Gençlik Merkezi</title>
+    <title>Atatürk AR — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aframe-stl-model-component/dist/aframe-stl-model-component.min.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Montserrat:wght@200;400;500&display=swap');
-
-        :root { --gold: #b8973a; --ink: #06070a; --paper: #f2ede4; --mist: #9fa3aa; }
+        :root { --gold: #b8973a; --ink: #06070a; --paper: #f2ede4; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); color: var(--paper); font-family: 'Montserrat', sans-serif; }
-
+        body { background: var(--ink); color: var(--paper); font-family: 'Montserrat', sans-serif; overflow: hidden; }
+        
         #splash {
             position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column;
             align-items: center; justify-content: center; background: var(--ink);
-            transition: opacity 1s ease, visibility 1s ease;
+            transition: opacity 1s ease;
         }
-        #splash.out { opacity: 0; visibility: hidden; }
-        
-        .splash-tag { font-size: 10px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 20px;}
-        .splash-name { font-family: 'Cormorant Garamond', serif; font-size: 60px; font-weight: 600; text-align: center; line-height: 1; }
-        .splash-name em { display: block; font-style: italic; font-weight: 300; color: var(--gold); font-size: 0.6em; letter-spacing: 5px; margin-top: 10px; }
-        
+        #splash.out { opacity: 0; pointer-events: none; }
         .s-btn {
-            margin-top: 40px; padding: 15px 40px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600;
-            letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border: 1px solid var(--gold);
-            background: var(--gold); color: var(--ink); border-radius: 4px; transition: 0.3s;
+            margin-top: 30px; padding: 15px 35px; border: 1px solid var(--gold);
+            background: var(--gold); color: var(--ink); cursor: pointer; font-weight: 600;
         }
-        .s-btn:hover { background: transparent; color: var(--gold); }
-        .developer-note { margin-top: 25px; font-size: 10px; color: var(--mist); letter-spacing: 2px; }
-        .a-enter-vr { display: none !important; }
     </style>
 </head>
 <body>
 
     <div id="splash">
-        <div class="splash-tag">Küçükçekmece Gençlik Merkezi</div>
-        <h1 class="splash-name">Atatürk<em>Yaşıyor</em></h1>
-        <button class="s-btn" id="btn-ar-splash">📱 Kamerayı Aç ve Logoyu Okut</button>
-        <div class="developer-note">Geliştirici: esmanur çaça</div>
+        <h1 style="font-family: 'Cormorant Garamond', serif; font-size: 50px;">Atatürk<em>Yaşıyor</em></h1>
+        <button class="s-btn" id="start-btn">📱 KAMERAYI BAŞLAT</button>
+        <p style="margin-top: 20px; font-size: 10px; color: #999;">Geliştirici: esmanur çaça</p>
     </div>
 
     <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         
         <a-assets>
-            <a-asset-item id="ataturkModel" src="./kendi_modelin.stl"></a-asset-item>
+            <a-asset-item id="ataturkSTL" src="./mustafakemal.stl"></a-asset-item>
         </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <a-entity mindar-image-target="targetIndex: 0">
             <a-entity 
-                stl-model="src: #ataturkModel" 
-                material="color: #b8973a; metalness: 0.5; roughness: 0.4"
+                stl-model="src: #ataturkSTL" 
+                material="color: #b8973a; metalness: 0.6; roughness: 0.3"
                 rotation="-90 0 0" 
                 position="0 0 0" 
                 scale="0.05 0.05 0.05">
             </a-entity>
         </a-entity>
-
     </a-scene>
 
     <script>
         const splash = document.getElementById('splash');
-        const btnArSplash = document.getElementById('btn-ar-splash');
-
-        btnArSplash.addEventListener('click', () => {
+        document.getElementById('start-btn').addEventListener('click', () => {
             splash.classList.add('out');
-            setTimeout(() => splash.style.display = 'none', 1000);
         });
     </script>
 </body>
