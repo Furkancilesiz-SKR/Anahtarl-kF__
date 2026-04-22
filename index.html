@@ -4,72 +4,221 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Atatürk AR Sergisi — Küçükçekmece Gençlik Merkezi</title>
+
+    <!-- A-Frame + MindAR (sabit versiyon) -->
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
 
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Montserrat:wght@200;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Montserrat:wght@200;400;500;600&display=swap');
 
-        :root { --gold: #b8973a; --ink: #06070a; --paper: #f2ede4; --mist: #9fa3aa; }
+        :root {
+            --gold: #b8973a;
+            --ink: #06070a;
+            --paper: #f2ede4;
+            --mist: #9fa3aa;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); color: var(--paper); font-family: 'Montserrat', sans-serif; }
 
-        /* Başlangıç Ekranı */
+        /* ── BAŞLANGIÇ EKRANI ── */
         #splash {
-            position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; background: var(--ink);
+            position: fixed; inset: 0; z-index: 9000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: var(--ink);
+            padding: 30px;
             transition: opacity 1s ease, visibility 1s ease;
         }
         #splash.out { opacity: 0; visibility: hidden; }
-        
-        .splash-tag { font-size: 10px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 20px; text-align: center;}
-        .splash-name { font-family: 'Cormorant Garamond', serif; font-size: 60px; font-weight: 600; text-align: center; line-height: 1; }
-        .splash-name em { display: block; font-style: italic; font-weight: 300; color: var(--gold); font-size: 0.6em; letter-spacing: 5px; margin-top: 10px; }
-        
+
+        .splash-tag {
+            font-size: 10px; letter-spacing: 4px;
+            color: var(--gold); text-transform: uppercase;
+            margin-bottom: 20px; text-align: center;
+        }
+        .splash-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(42px, 12vw, 72px);
+            font-weight: 600; text-align: center; line-height: 1;
+        }
+        .splash-name em {
+            display: block; font-style: italic;
+            font-weight: 300; color: var(--gold);
+            font-size: 0.55em; letter-spacing: 5px; margin-top: 12px;
+        }
+        .splash-divider {
+            width: 40px; height: 1px;
+            background: var(--gold); margin: 30px auto;
+            opacity: 0.6;
+        }
+        .splash-desc {
+            font-size: 11px; letter-spacing: 1.5px; color: var(--mist);
+            text-align: center; max-width: 260px; line-height: 1.8;
+            margin-bottom: 36px;
+        }
         .s-btn {
-            margin-top: 40px; padding: 15px 40px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600;
-            letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border: 1px solid var(--gold);
-            background: var(--gold); color: var(--ink); border-radius: 4px; transition: 0.3s;
+            padding: 15px 44px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 11px; font-weight: 600;
+            letter-spacing: 3px; text-transform: uppercase;
+            cursor: pointer; border: 1px solid var(--gold);
+            background: var(--gold); color: var(--ink);
+            border-radius: 4px; transition: 0.3s;
         }
         .s-btn:hover { background: transparent; color: var(--gold); }
+        .developer-note {
+            position: absolute; bottom: 24px;
+            font-size: 10px; color: var(--mist);
+            letter-spacing: 2px; text-align: center;
+        }
 
-        .developer-note { margin-top: 25px; font-size: 10px; color: var(--mist); letter-spacing: 2px; }
+        /* ── YÜKLEME GÖSTERGESI ── */
+        #loading-overlay {
+            position: fixed; inset: 0; z-index: 8000;
+            background: rgba(6,7,10,0.85);
+            display: none; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 16px;
+        }
+        #loading-overlay.visible { display: flex; }
+        .loader-ring {
+            width: 44px; height: 44px;
+            border: 2px solid rgba(184,151,58,0.2);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loader-text { font-size: 11px; letter-spacing: 2px; color: var(--mist); }
+
+        /* ── KULLANICI REHBERİ (marker bulunamadı) ── */
+        #hint-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            z-index: 7000;
+            background: linear-gradient(transparent, rgba(6,7,10,0.9));
+            padding: 40px 20px 28px;
+            text-align: center;
+            display: none;
+            transition: opacity 0.5s;
+        }
+        #hint-bar.visible { display: block; }
+        .hint-icon { font-size: 22px; margin-bottom: 8px; }
+        .hint-text { font-size: 11px; letter-spacing: 1.5px; color: var(--mist); line-height: 1.7; }
+        .hint-text strong { color: var(--gold); font-weight: 500; }
+
+        /* ── MARKER BULUNDU BADGE ── */
+        #found-badge {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 7000;
+            background: var(--gold); color: var(--ink);
+            font-size: 10px; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase;
+            padding: 7px 18px; border-radius: 20px;
+            opacity: 0; transition: opacity 0.4s;
+            white-space: nowrap;
+        }
+        #found-badge.visible { opacity: 1; }
+
         .a-enter-vr { display: none !important; }
+        .a-loader-title { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="splash">
-        <div class="splash-tag">Küçükçekmece Gençlik Merkezi</div>
-        <h1 class="splash-name">Atatürk<em>Yaşıyor</em></h1>
-        <button class="s-btn" id="btn-ar-splash">📱 Kamerayı Başlat</button>
-        <div class="developer-note">Geliştirici: esmanur çaça</div>
+<!-- BAŞLANGIÇ EKRANI -->
+<div id="splash">
+    <div class="splash-tag">Küçükçekmece Gençlik Merkezi</div>
+    <h1 class="splash-name">Atatürk<em>Yaşıyor</em></h1>
+    <div class="splash-divider"></div>
+    <p class="splash-desc">Sergi afişini kameraya göster ve tarihi canlandır</p>
+    <button class="s-btn" id="btn-ar-splash">📱 Kamerayı Başlat</button>
+    <div class="developer-note">Geliştirici: esmanur çaça</div>
+</div>
+
+<!-- YÜKLEME GÖSTERGESİ -->
+<div id="loading-overlay">
+    <div class="loader-ring"></div>
+    <div class="loader-text">Yükleniyor...</div>
+</div>
+
+<!-- KULLANICI REHBERİ -->
+<div id="hint-bar">
+    <div class="hint-icon">🔍</div>
+    <div class="hint-text">
+        <strong>Sergi afişini</strong> kameraya göster<br>
+        Düz yüzeyde, iyi ışıkta tut
     </div>
+</div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        
-        <a-assets>
-            <a-asset-item id="ataturkModel" src="./mustafakemal.glb"></a-asset-item>
-        </a-assets>
+<!-- MARKER BULUNDU BADGE -->
+<div id="found-badge">✦ Atatürk</div>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+<!-- AR SAHNE — başlangıçta gizli -->
+<a-scene
+    id="ar-scene"
+    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0.001; maxTrack: 1; uiLoading: no; uiError: no; uiScanning: no;"
+    color-space="sRGB"
+    renderer="colorManagement: true; physicallyCorrectLights: true;"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    style="display:none;"
+>
+    <a-assets>
+        <a-asset-item id="ataturkModel" src="./mustafakemal.glb"></a-asset-item>
+    </a-assets>
 
-        <a-entity mindar-image-target="targetIndex: 0">
-            <a-gltf-model rotation="0 0 0" position="0 0 0" scale="0.2 0.2 0.2" src="#ataturkModel" animation-mixer></a-gltf-model>
-        </a-entity>
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-    </a-scene>
+    <a-entity mindar-image-target="targetIndex: 0" id="ar-target">
+        <a-gltf-model
+            rotation="0 0 0"
+            position="0 0 0"
+            scale="0.2 0.2 0.2"
+            src="#ataturkModel"
+            animation-mixer="loop: repeat"
+        ></a-gltf-model>
+    </a-entity>
+</a-scene>
 
-    <script>
-        const splash = document.getElementById('splash');
-        const btnArSplash = document.getElementById('btn-ar-splash');
+<script>
+    const splash       = document.getElementById('splash');
+    const loadingOv    = document.getElementById('loading-overlay');
+    const hintBar      = document.getElementById('hint-bar');
+    const foundBadge   = document.getElementById('found-badge');
+    const arScene      = document.getElementById('ar-scene');
+    const arTarget     = document.getElementById('ar-target');
+    const btnStart     = document.getElementById('btn-ar-splash');
 
-        // Butona tıklanınca başlangıç ekranını gizle
-        btnArSplash.addEventListener('click', () => {
-            splash.classList.add('out');
-            setTimeout(() => splash.style.display = 'none', 1000);
-        });
-    </script>
-</body>
-</html>
+    let hintTimeout;
+
+    // 1) BUTONA TIKLANINCA
+    btnStart.addEventListener('click', () => {
+        // Splash'i kapat
+        splash.classList.add('out');
+        setTimeout(() => splash.style.display = 'none', 1000);
+
+        // Yükleme göstergesini aç
+        loadingOv.classList.add('visible');
+
+        // AR sahnesini başlat
+        arScene.style.display = 'block';
+    });
+
+    // 2) AR HAZIR OLUNCA
+    arScene.addEventListener('arReady', () => {
+        loadingOv.classList.remove('visible');
+        showHint();
+    });
+
+    // 3) MARKER BULUNUNCA
+    arTarget.addEventListener('targetFound', () => {
+        hideHint();
+        foundBadge.classList.add('visible');
+    });
+
+    // 4) MARKER KAYBEDİLİNCE
+    arTarget.addEventListener('targetLost', () => {
+        foundBadge.classList.remove('visible');
+        showHint();
