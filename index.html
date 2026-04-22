@@ -1,70 +1,78 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Küçükçekmece AR - v6</title>
-  
-  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.0/dist/mindar-image-aframe.prod.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Atatürk AR Sergisi — Küçükçekmece Gençlik Merkezi</title>
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-stl-model-component/dist/aframe-stl-model-component.min.js"></script>
 
-  <style>
-    body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
-    
-    #baslat-ekrani {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.95); z-index: 9999; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; color: white; font-family: sans-serif;
-    }
-    
-    #baslat-btn {
-      padding: 15px 30px; font-size: 20px; font-weight: bold; color: white;
-      background: #28a745; border: none; border-radius: 10px; cursor: pointer; margin-top: 20px;
-    }
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Montserrat:wght@200;400;500&display=swap');
 
-    #surum { position: fixed; top: 10px; right: 10px; color: lime; z-index: 1000; font-family: monospace; }
-    #gelistirici { position: fixed; bottom: 10px; width: 100%; text-align: center; color: gray; z-index: 1000; font-family: sans-serif; font-size: 12px; }
-  </style>
+        :root { --gold: #b8973a; --ink: #06070a; --paper: #f2ede4; --mist: #9fa3aa; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background: var(--ink); color: var(--paper); font-family: 'Montserrat', sans-serif; }
+
+        #splash {
+            position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: var(--ink);
+            transition: opacity 1s ease, visibility 1s ease;
+        }
+        #splash.out { opacity: 0; visibility: hidden; }
+        
+        .splash-tag { font-size: 10px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 20px;}
+        .splash-name { font-family: 'Cormorant Garamond', serif; font-size: 60px; font-weight: 600; text-align: center; line-height: 1; }
+        .splash-name em { display: block; font-style: italic; font-weight: 300; color: var(--gold); font-size: 0.6em; letter-spacing: 5px; margin-top: 10px; }
+        
+        .s-btn {
+            margin-top: 40px; padding: 15px 40px; font-family: 'Montserrat', sans-serif; font-size: 12px; font-weight: 600;
+            letter-spacing: 2px; text-transform: uppercase; cursor: pointer; border: 1px solid var(--gold);
+            background: var(--gold); color: var(--ink); border-radius: 4px; transition: 0.3s;
+        }
+        .s-btn:hover { background: transparent; color: var(--gold); }
+        .developer-note { margin-top: 25px; font-size: 10px; color: var(--mist); letter-spacing: 2px; }
+        .a-enter-vr { display: none !important; }
+    </style>
 </head>
 <body>
 
-  <div id="baslat-ekrani">
-    <h2>AR Sistemine Hoş Geldiniz</h2>
-    <button id="baslat-btn">KAMERAYI AÇ</button>
-  </div>
+    <div id="splash">
+        <div class="splash-tag">Küçükçekmece Gençlik Merkezi</div>
+        <h1 class="splash-name">Atatürk<em>Yaşıyor</em></h1>
+        <button class="s-btn" id="btn-ar-splash">📱 Kamerayı Aç ve Logoyu Okut</button>
+        <div class="developer-note">Geliştirici: esmanur çaça</div>
+    </div>
 
-  <div id="surum">v6.0.0</div>
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <a-asset-item id="ataturkModel" src="./kendi_modelin.stl"></a-asset-item>
+        </a-assets>
 
-  <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-    <a-assets>
-      <video id="video-ataturk" src="./ataturk.mp4" preload="auto" loop crossorigin="anonymous" playsinline webkit-playsinline></video>
-    </a-assets>
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity mindar-image-target="targetIndex: 0" id="hedef-logo">
-      <a-plane material="src: #video-ataturk;" position="0 0 0" height="1" width="1.77" rotation="0 0 0"></a-plane>
-    </a-entity>
-  </a-scene>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-  <div id="gelistirici">Geliştirici: Esmanur Çaça</div>
+        <a-entity mindar-image-target="targetIndex: 0">
+            <a-entity 
+                stl-model="src: #ataturkModel" 
+                material="color: #b8973a; metalness: 0.5; roughness: 0.4"
+                rotation="-90 0 0" 
+                position="0 0 0" 
+                scale="0.05 0.05 0.05">
+            </a-entity>
+        </a-entity>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const btn = document.querySelector('#baslat-btn');
-      const ekran = document.querySelector('#baslat-ekrani');
-      const sahne = document.querySelector('a-scene');
-      const video = document.querySelector('#video-ataturk');
-      const hedef = document.querySelector('#hedef-logo');
+    </a-scene>
 
-      btn.addEventListener('click', function() {
-        ekran.style.display = 'none';
-        video.muted = false;
-        video.play().then(() => video.pause()).catch(e => console.log(e));
-        sahne.systems["mindar-image-system"].start();
-      });
+    <script>
+        const splash = document.getElementById('splash');
+        const btnArSplash = document.getElementById('btn-ar-splash');
 
-      hedef.addEventListener("targetFound", () => video.play());
-      hedef.addEventListener("targetLost", () => video.pause());
-    });
-  </script>
+        btnArSplash.addEventListener('click', () => {
+            splash.classList.add('out');
+            setTimeout(() => splash.style.display = 'none', 1000);
+        });
+    </script>
 </body>
 </html>
