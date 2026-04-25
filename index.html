@@ -6,96 +6,100 @@
     <title>Atatürk AR Sergi — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #121212; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; }
 
-        /* 1. AŞAMA: KARTVİZİT TARAMA EKRANI */
-        #scanner-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10; }
-        
-        #scan-hint {
-            position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
-            background: rgba(230, 57, 70, 0.9); color: white; padding: 15px 30px;
-            border-radius: 50px; font-size: 16px; font-weight: bold; z-index: 15; 
-            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); white-space: nowrap;
+        /* BAŞLANGIÇ EKRANI (KAMERA İZNİ İÇİN ŞART) */
+        #splash {
+            position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+            transition: opacity 0.5s ease;
+        }
+        .splash-name { color: white; font-size: 32px; text-align: center; margin-bottom: 30px; }
+        .s-btn {
+            padding: 15px 35px; background-color: #e63946; color: white;
+            border: none; border-radius: 50px; font-size: 16px; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4); cursor: pointer;
         }
 
+        /* AR ARAYÜZÜ (KAMERA AÇIKKEN GÖRÜNEN KISIM) */
+        #ui-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10; pointer-events: none;
+        }
         #flash-btn {
-            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.2); color: white; padding: 10px 20px;
-            border: 1px solid white; border-radius: 20px; font-size: 14px; font-weight: bold;
-            z-index: 15; cursor: pointer; backdrop-filter: blur(5px);
+            position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.5); color: white;
+            border: 1px solid white; border-radius: 20px; padding: 10px 15px; font-size: 14px;
+            pointer-events: auto; cursor: pointer;
+        }
+        #scan-hint {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(230, 57, 70, 0.9); color: white; padding: 12px 25px;
+            border-radius: 30px; font-size: 14px; font-weight: bold; white-space: nowrap;
+            transition: opacity 0.3s;
         }
 
-        /* 2. AŞAMA: MODEL İNCELEME EKRANI (OKUTUNCA AÇILACAK) */
-        #viewer-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 20;
-            display: none; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
-        }
-        
-        #ar-element { width: 100%; height: 100%; }
-
-        #ar-button {
-            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
-            padding: 20px 40px; background-color: #e63946; color: white;
-            border: none; border-radius: 50px; font-size: 18px; font-weight: bold;
-            box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4); z-index: 1000; cursor: pointer;
-        }
-
-        .footer-note {
-            position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: #95a5a6; font-size: 11px; z-index: 999; letter-spacing: 1px;
-        }
-
+        .developer-note { position: absolute; bottom: 10px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 10px; }
         .a-enter-vr { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
-    <button id="flash-btn">💡 Işığı Aç / Kapat</button>
-    
-    <div id="scanner-screen">
-        <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-            <a-entity mindar-image-target="targetIndex: 0" id="target-entity"></a-entity>
-        </a-scene>
+    <div id="splash">
+        <h1 class="splash-name">Atatürk AR Sergisi</h1>
+        <button class="s-btn" id="start-btn">📱 Kamerayı Başlat</button>
+        <div class="developer-note">Geliştirici: esmanur çaça</div>
     </div>
 
-    <div id="viewer-screen">
-        <model-viewer 
-            id="ar-element"
-            src="./3d.glb" 
-            ar 
-            ar-modes="webxr scene-viewer quick-look" 
-            camera-controls 
-            auto-rotate
-            shadow-intensity="2"
-            exposure="1.5"
-            environment-image="neutral"
-            /* Atatürk'ün dik durması için gerekli açı ayarı */
-            orientation="-90deg 0deg 0deg"
-            touch-action="pan-y">
-            
-            <button slot="ar-button" id="ar-button">🚀 SERGİYİ BAŞLAT</button>
-            
-            <div class="footer-note">
-                Modeli parmağınızla döndürebilirsiniz.<br>
-                Geliştirici: esmanur çaça
-            </div>
-        </model-viewer>
+    <div id="ui-layer" style="display: none;">
+        <button id="flash-btn">💡 Işık</button>
+        <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
     </div>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <a-asset-item id="ataturkModel" src="./3d.glb"></a-asset-item>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
+            <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
+            <a-light type="directional" color="#FFF" intensity="1" position="1 2 1"></a-light>
+            
+            <a-gltf-model src="#ataturkModel" rotation="-90 0 0" position="0 0 0" scale="0.1 0.1 0.1" animation-mixer></a-gltf-model>
+        </a-entity>
+
+    </a-scene>
 
     <script>
-        const targetEntity = document.querySelector('#target-entity');
-        const scannerScreen = document.querySelector('#scanner-screen');
-        const scanHint = document.querySelector('#scan-hint');
-        const flashBtn = document.querySelector('#flash-btn');
-        const viewerScreen = document.querySelector('#viewer-screen');
-        const viewer = document.querySelector("#ar-element");
+        const splash = document.getElementById('splash');
+        const startBtn = document.getElementById('start-btn');
+        const uiLayer = document.getElementById('ui-layer');
+        const sceneEl = document.querySelector('a-scene');
+        const targetEntity = document.getElementById('target-entity');
+        const scanHint = document.getElementById('scan-hint');
+        const flashBtn = document.getElementById('flash-btn');
 
-        // --- FLAŞ (FENER) KONTROLÜ ---
+        // 1. KAMERAYI BAŞLAT
+        startBtn.addEventListener('click', () => {
+            splash.style.display = 'none';
+            uiLayer.style.display = 'block';
+            sceneEl.systems["mindar-image-system"].start();
+        });
+
+        // 2. KARTVİZİT GÖRÜNÜNCE
+        targetEntity.addEventListener('targetFound', () => {
+            scanHint.style.display = 'none'; // Kartı buldu, uyarıyı gizle
+        });
+
+        // 3. KARTVİZİT KAMERADAN ÇIKINCA
+        targetEntity.addEventListener('targetLost', () => {
+            scanHint.style.display = 'block'; // Kartı kaybetti, uyarıyı tekrar göster
+        });
+
+        // 4. FLAŞ (FENER) KONTROLÜ
         let flashOn = false;
         flashBtn.addEventListener('click', async () => {
             const video = document.querySelector('video');
@@ -106,34 +110,11 @@
                     flashOn = !flashOn;
                     try {
                         await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-                        flashBtn.innerText = flashOn ? "✅ Işık Açık" : "💡 Işığı Aç / Kapat";
+                        flashBtn.style.background = flashOn ? "rgba(230, 57, 70, 0.9)" : "rgba(0, 0, 0, 0.5)";
                     } catch (err) { console.log(err); }
                 } else {
                     alert("Cihazınız web üzerinden flaş desteği vermiyor.");
                 }
-            }
-        });
-
-        // --- KARTVİZİT OKUNDUĞUNDA SİSTEMİ DEĞİŞTİR ---
-        targetEntity.addEventListener('targetFound', () => {
-            // RAM temizliği: Eski kamera sistemini tamamen durdur ve sil
-            const aScene = document.querySelector('a-scene');
-            aScene.systems["mindar-image-system"].stop();
-            
-            scannerScreen.remove();
-            scanHint.remove();
-            flashBtn.remove();
-            
-            // Yeni şık inceleme ekranını aç (Model artık kartvizite ihtiyaç duymaz)
-            viewerScreen.style.display = 'block';
-        });
-
-        // --- AR MODU BUTON GİZLEME ---
-        viewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                document.querySelector(".footer-note").style.display = 'none';
-            } else if (event.detail.status === 'not-presenting') {
-                document.querySelector(".footer-note").style.display = 'block';
             }
         });
     </script>
