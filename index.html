@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Atatürk AR Sergi — Küçükçekmece Gençlik Merkezi</title>
+    <title>Atatürk AR Sergi — Küçükçekmece</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
@@ -11,18 +11,25 @@
     <style>
         body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; }
 
-        /* 1. ADIM: TARAMA EKRANI */
-        #scanner-screen {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10;
-        }
+        /* --- 1. AŞAMA: TARAMA EKRANI --- */
+        #scanner-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10; }
+        
         #scan-hint {
             position: absolute; top: 50px; left: 50%; transform: translateX(-50%);
             background: rgba(230, 57, 70, 0.9); color: white; padding: 15px 30px;
             border-radius: 50px; font-size: 16px; font-weight: bold; z-index: 15; 
-            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); white-space: nowrap;
         }
 
-        /* 2. ADIM: MODEL İNCELEME EKRANI */
+        /* Flaş Butonu */
+        #flash-btn {
+            position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.2); color: white; padding: 10px 20px;
+            border: 1px solid white; border-radius: 20px; font-size: 14px; font-weight: bold;
+            z-index: 15; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s;
+        }
+
+        /* --- 2. AŞAMA: MODEL EKRANI --- */
         #viewer-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 20;
             display: none; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
@@ -30,6 +37,7 @@
         
         #ar-element { width: 100%; height: 100%; }
 
+        /* Kırmızı Buton (Özel Slot) */
         #ar-button {
             position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
             padding: 20px 40px; background-color: #e63946; color: white;
@@ -48,6 +56,7 @@
 <body>
 
     <div id="scan-hint">📷 Anahtarlığı Kameraya Gösterin</div>
+    <button id="flash-btn">💡 Flaş Aç / Kapat</button>
     <div id="scanner-screen">
         <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -69,8 +78,8 @@
             orientation="0deg 0deg 0deg"
             touch-action="pan-y">
             
-            <button id="ar-button">🚀 SERGİYİ BAŞLAT</button>
-            <div class="hint-text">Parmağınızla döndürebilirsiniz. Sergiyi başlatınca odaya yerleşir.</div>
+            <button slot="ar-button" id="ar-button">🚀 SERGİYİ BAŞLAT</button>
+            <div class="hint-text" id="hint-text">Modeli döndürebilirsiniz. Sergiyi başlatınca odaya yerleşir.</div>
         </model-viewer>
     </div>
 
@@ -78,33 +87,58 @@
         const targetEntity = document.querySelector('#target-entity');
         const scannerScreen = document.querySelector('#scanner-screen');
         const scanHint = document.querySelector('#scan-hint');
+        const flashBtn = document.querySelector('#flash-btn');
         const viewerScreen = document.querySelector('#viewer-screen');
-        const viewer = document.querySelector("#ar-element");
         const arBtn = document.querySelector("#ar-button");
+        const hintText = document.querySelector("#hint-text");
 
-        // 1. DÜZELTME: ANAHTARLIK OKUNUNCA
+        // --- 1. FLAŞ SİSTEMİ ---
+        let flashOn = false;
+        flashBtn.addEventListener('click', async () => {
+            // Kameraları bul
+            const video = document.querySelector('video');
+            if (video && video.srcObject) {
+                const track = video.srcObject.getVideoTracks()[0];
+                const capabilities = track.getCapabilities();
+                
+                // Telefonun flaş özelliği varsa
+                if (capabilities.torch) {
+                    flashOn = !flashOn;
+                    try {
+                        await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+                        flashBtn.style.backgroundColor = flashOn ? "rgba(241, 196, 15, 0.8)" : "rgba(255, 255, 255, 0.2)";
+                        flashBtn.style.color = flashOn ? "black" : "white";
+                    } catch (err) {
+                        console.log("Flaş hatası:", err);
+                    }
+                } else {
+                    alert("Bu cihaz tarayıcı üzerinden flaş kullanımını desteklemiyor.");
+                }
+            }
+        });
+
+        // --- 2. ANAHTARLIK OKUNDUĞUNDA (KASMA ÇÖZÜMÜ) ---
         targetEntity.addEventListener('targetFound', () => {
-            scannerScreen.style.display = 'none';
-            scanHint.style.display = 'none';
+            // A-Frame sistemini ve kamerayı TAMAMEN durdur, RAM'i temizle
+            const aScene = document.querySelector('a-scene');
+            aScene.systems["mindar-image-system"].stop();
+            
+            // Tarama ekranını tamamen sil (kasmanın önüne geçer)
+            scannerScreen.remove();
+            scanHint.remove();
+            flashBtn.remove();
+            
+            // Model ekranını aç
             viewerScreen.style.display = 'block';
         });
 
-        // 2. DÜZELTME: BUTON ÇALIŞTIRMA
-        arBtn.addEventListener("click", () => {
-            // activateAR fonksiyonu doğrudan çağrılıyor
-            viewer.activateAR();
-        });
-
-        // 3. DÜZELTME: ATATÜRK YAN DURUYORSA
-        // Eğer model hâlâ yan duruyorsa, yukarıdaki 'orientation' kısmını 
-        // "-90deg 0deg 0deg" veya "0deg 90deg 0deg" yaparak test et.
-        // viewer.setAttribute('orientation', '0deg 0deg 0deg'); 
-
+        // --- 3. AR MODU BAŞLAYINCA BUTONLARI GİZLE ---
+        const viewer = document.querySelector("#ar-element");
         viewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                arBtn.style.display = 'none';
+                hintText.style.display = 'none';
             } else if (event.detail.status === 'not-presenting') {
-                arBtn.style.display = 'block';
+                hintText.style.display = 'block';
             }
         });
     </script>
