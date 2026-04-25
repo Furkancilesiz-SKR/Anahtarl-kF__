@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Atatürk AR Sergi — Küçükçekmece</title>
+    <title>Atatürk AR Sergi — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
 
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', sans-serif; background-color: #121212; }
 
-        /* --- 1. AŞAMA: TARAMA EKRANI --- */
+        /* 1. AŞAMA: KARTVİZİT TARAMA EKRANI */
         #scanner-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10; }
         
         #scan-hint {
@@ -28,7 +28,7 @@
             z-index: 15; cursor: pointer; backdrop-filter: blur(5px);
         }
 
-        /* --- 2. AŞAMA: MODEL EKRANI (OKUTUNCA AÇILAN) --- */
+        /* 2. AŞAMA: MODEL İNCELEME EKRANI (OKUTUNCA AÇILACAK) */
         #viewer-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 20;
             display: none; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
@@ -37,15 +37,15 @@
         #ar-element { width: 100%; height: 100%; }
 
         #ar-button {
-            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
             padding: 20px 40px; background-color: #e63946; color: white;
-            border: none; border-radius: 50px; font-size: 20px; font-weight: bold;
+            border: none; border-radius: 50px; font-size: 18px; font-weight: bold;
             box-shadow: 0 10px 25px rgba(230, 57, 70, 0.4); z-index: 1000; cursor: pointer;
         }
 
-        .hint-text {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            color: #bdc3c7; font-size: 13px; z-index: 999;
+        .footer-note {
+            position: absolute; bottom: 30px; width: 100%; text-align: center;
+            color: #95a5a6; font-size: 11px; z-index: 999; letter-spacing: 1px;
         }
 
         .a-enter-vr { display: none !important; }
@@ -53,8 +53,9 @@
 </head>
 <body>
 
-    <div id="scan-hint">📷 Anahtarlığı Kameraya Gösterin</div>
-    <button id="flash-btn">💡 Flaş Aç / Kapat</button>
+    <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
+    <button id="flash-btn">💡 Işığı Aç / Kapat</button>
+    
     <div id="scanner-screen">
         <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
             <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -71,14 +72,18 @@
             camera-controls 
             auto-rotate
             shadow-intensity="2"
-            exposure="1.4"
+            exposure="1.5"
             environment-image="neutral"
-            /* ATATÜRK YATIK DURUYORSA BURAYI DÜZELTTİK: -90 derece X ekseninde döndürerek dik konuma getirdik */
+            /* Atatürk'ün dik durması için gerekli açı ayarı */
             orientation="-90deg 0deg 0deg"
             touch-action="pan-y">
             
             <button slot="ar-button" id="ar-button">🚀 SERGİYİ BAŞLAT</button>
-            <div class="hint-text" id="hint-text">Modeli döndürebilirsiniz. Sergiyi başlatınca odaya yerleşir.</div>
+            
+            <div class="footer-note">
+                Modeli parmağınızla döndürebilirsiniz.<br>
+                Geliştirici: esmanur çaça
+            </div>
         </model-viewer>
     </div>
 
@@ -90,7 +95,7 @@
         const viewerScreen = document.querySelector('#viewer-screen');
         const viewer = document.querySelector("#ar-element");
 
-        // --- FLAŞ KONTROLÜ ---
+        // --- FLAŞ (FENER) KONTROLÜ ---
         let flashOn = false;
         flashBtn.addEventListener('click', async () => {
             const video = document.querySelector('video');
@@ -101,31 +106,34 @@
                     flashOn = !flashOn;
                     try {
                         await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+                        flashBtn.innerText = flashOn ? "✅ Işık Açık" : "💡 Işığı Aç / Kapat";
                     } catch (err) { console.log(err); }
+                } else {
+                    alert("Cihazınız web üzerinden flaş desteği vermiyor.");
                 }
             }
         });
 
-        // --- ANAHTARLIK OKUNDUĞUNDA ---
+        // --- KARTVİZİT OKUNDUĞUNDA SİSTEMİ DEĞİŞTİR ---
         targetEntity.addEventListener('targetFound', () => {
+            // RAM temizliği: Eski kamera sistemini tamamen durdur ve sil
             const aScene = document.querySelector('a-scene');
             aScene.systems["mindar-image-system"].stop();
             
-            // RAM'i temizlemek ve kasmayı önlemek için tarayıcıyı siliyoruz
             scannerScreen.remove();
             scanHint.remove();
             flashBtn.remove();
             
-            // Senin minimalist ekranını açıyoruz
+            // Yeni şık inceleme ekranını aç (Model artık kartvizite ihtiyaç duymaz)
             viewerScreen.style.display = 'block';
         });
 
-        // --- AR MODU KONTROLÜ ---
+        // --- AR MODU BUTON GİZLEME ---
         viewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                document.querySelector("#hint-text").style.display = 'none';
+                document.querySelector(".footer-note").style.display = 'none';
             } else if (event.detail.status === 'not-presenting') {
-                document.querySelector("#hint-text").style.display = 'block';
+                document.querySelector(".footer-note").style.display = 'block';
             }
         });
     </script>
