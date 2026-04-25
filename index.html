@@ -1,35 +1,143 @@
 <!DOCTYPE html>
-<html>
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Atatürk AR Test</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Minimalist AR Sergi — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
     <style>
-        body { margin: 0; overflow: hidden; }
-        /* A-Frame'in sağ alttaki gereksiz butonunu gizle */
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #f8f9fa; }
+
+        /* -------------------------------------
+           ADIM 1: TARAMA EKRANI TASARIMI 
+        -------------------------------------- */
+        #scanner-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10;
+        }
+        #scan-hint {
+            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: white; padding: 12px 24px;
+            border-radius: 30px; font-size: 14px; font-weight: bold; z-index: 15; 
+            text-align: center; white-space: nowrap; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.05); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        /* -------------------------------------
+           ADIM 2: SENİN MİNİMALİST TASARIMIN 
+        -------------------------------------- */
+        #viewer-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 20;
+            display: none; /* İlk başta gizli, okutulunca açılacak */
+            background-color: #f8f9fa;
+        }
+        
+        #ar-element { 
+            --ar-button-display: none; 
+            width: 100%; 
+            height: 100vh; 
+        }
+
+        #ar-button {
+            position: absolute;
+            bottom: 100px; 
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 18px 36px;
+            background-color: #e63946;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            cursor: pointer;
+        }
+
+        .hint {
+            position: absolute;
+            bottom: 60px;
+            width: 100%;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+            z-index: 999;
+        }
+
+        /* Gereksiz VR Butonunu Gizle */
         .a-enter-vr { display: none !important; }
     </style>
 </head>
 <body>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        
-        <a-assets>
-            <a-asset-item id="ataturkModel" src="./3d.glb"></a-asset-item>
-        </a-assets>
-
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <a-entity mindar-image-target="targetIndex: 0">
-            <a-light type="ambient" color="#FFF" intensity="1.5"></a-light>
+    <div id="scan-hint">📷 Lütfen Kamerayı Anahtarlığa Tutun</div>
+    <div id="scanner-screen">
+        <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+            <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
             
-            <a-gltf-model rotation="0 0 0" position="-1 0 0" scale="1 1 1" src="#ataturkModel"></a-gltf-model>
-        </a-entity>
+            <a-entity mindar-image-target="targetIndex: 0" id="target-entity"></a-entity>
+        </a-scene>
+    </div>
 
-    </a-scene>
+    <div id="viewer-screen">
+        <model-viewer 
+            id="ar-element"
+            src="./3d.glb" 
+            ar 
+            ar-modes="webxr scene-viewer quick-look" 
+            camera-controls 
+            auto-rotate
+            touch-action="pan-y">
+            
+            <button id="ar-button">🚀 SERGİYİ BAŞLAT</button>
+            <div class="hint">Ekranda döndürebilir veya kırmızı butona basarak odaya yerleştirebilirsiniz.</div>
+        </model-viewer>
+    </div>
 
+    <script>
+        // Sayfadaki elementleri tanımlıyoruz
+        const targetEntity = document.querySelector('#target-entity');
+        const scannerScreen = document.querySelector('#scanner-screen');
+        const scanHint = document.querySelector('#scan-hint');
+        const viewerScreen = document.querySelector('#viewer-screen');
+        const aScene = document.querySelector('a-scene');
+        const viewer = document.querySelector("#ar-element");
+        const arBtn = document.querySelector("#ar-button");
+
+        // 1. ANAHTARLIK OKUNDUĞUNDA OLACAKLAR
+        targetEntity.addEventListener('targetFound', () => {
+            // A-Frame (Arka plan) kamerasını tamamen durdur ve ekranı gizle
+            aScene.systems["mindar-image-system"].stop();
+            scannerScreen.style.display = 'none';
+            scanHint.style.display = 'none';
+
+            // Senin hazırladığın şık 3D Viewer ekranını göster
+            viewerScreen.style.display = 'block';
+        });
+
+        // 2. KIRMIZI BUTONA BASILDIĞINDA
+        arBtn.addEventListener("click", () => {
+            viewer.activateAR();
+        });
+
+        // 3. MODEL ODAYA YERLEŞTİRİLİRKEN BUTONLARI GİZLE
+        viewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                arBtn.style.display = 'none';
+                document.querySelector(".hint").style.display = 'none';
+            } else {
+                arBtn.style.display = 'block';
+                document.querySelector(".hint").style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>
