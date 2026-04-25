@@ -21,15 +21,14 @@
             text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); white-space: nowrap;
         }
 
-        /* Flaş Butonu */
         #flash-btn {
             position: absolute; top: 110px; left: 50%; transform: translateX(-50%);
             background: rgba(255, 255, 255, 0.2); color: white; padding: 10px 20px;
             border: 1px solid white; border-radius: 20px; font-size: 14px; font-weight: bold;
-            z-index: 15; cursor: pointer; backdrop-filter: blur(5px); transition: 0.3s;
+            z-index: 15; cursor: pointer; backdrop-filter: blur(5px);
         }
 
-        /* --- 2. AŞAMA: MODEL EKRANI --- */
+        /* --- 2. AŞAMA: MODEL EKRANI (OKUTUNCA AÇILAN) --- */
         #viewer-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 20;
             display: none; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
@@ -37,7 +36,6 @@
         
         #ar-element { width: 100%; height: 100%; }
 
-        /* Kırmızı Buton (Özel Slot) */
         #ar-button {
             position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
             padding: 20px 40px; background-color: #e63946; color: white;
@@ -73,9 +71,10 @@
             camera-controls 
             auto-rotate
             shadow-intensity="2"
-            exposure="1.2"
+            exposure="1.4"
             environment-image="neutral"
-            orientation="0deg 0deg 0deg"
+            /* ATATÜRK YATIK DURUYORSA BURAYI DÜZELTTİK: -90 derece X ekseninde döndürerek dik konuma getirdik */
+            orientation="-90deg 0deg 0deg"
             touch-action="pan-y">
             
             <button slot="ar-button" id="ar-button">🚀 SERGİYİ BAŞLAT</button>
@@ -89,56 +88,44 @@
         const scanHint = document.querySelector('#scan-hint');
         const flashBtn = document.querySelector('#flash-btn');
         const viewerScreen = document.querySelector('#viewer-screen');
-        const arBtn = document.querySelector("#ar-button");
-        const hintText = document.querySelector("#hint-text");
+        const viewer = document.querySelector("#ar-element");
 
-        // --- 1. FLAŞ SİSTEMİ ---
+        // --- FLAŞ KONTROLÜ ---
         let flashOn = false;
         flashBtn.addEventListener('click', async () => {
-            // Kameraları bul
             const video = document.querySelector('video');
             if (video && video.srcObject) {
                 const track = video.srcObject.getVideoTracks()[0];
                 const capabilities = track.getCapabilities();
-                
-                // Telefonun flaş özelliği varsa
                 if (capabilities.torch) {
                     flashOn = !flashOn;
                     try {
                         await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-                        flashBtn.style.backgroundColor = flashOn ? "rgba(241, 196, 15, 0.8)" : "rgba(255, 255, 255, 0.2)";
-                        flashBtn.style.color = flashOn ? "black" : "white";
-                    } catch (err) {
-                        console.log("Flaş hatası:", err);
-                    }
-                } else {
-                    alert("Bu cihaz tarayıcı üzerinden flaş kullanımını desteklemiyor.");
+                    } catch (err) { console.log(err); }
                 }
             }
         });
 
-        // --- 2. ANAHTARLIK OKUNDUĞUNDA (KASMA ÇÖZÜMÜ) ---
+        // --- ANAHTARLIK OKUNDUĞUNDA ---
         targetEntity.addEventListener('targetFound', () => {
-            // A-Frame sistemini ve kamerayı TAMAMEN durdur, RAM'i temizle
             const aScene = document.querySelector('a-scene');
             aScene.systems["mindar-image-system"].stop();
             
-            // Tarama ekranını tamamen sil (kasmanın önüne geçer)
+            // RAM'i temizlemek ve kasmayı önlemek için tarayıcıyı siliyoruz
             scannerScreen.remove();
             scanHint.remove();
             flashBtn.remove();
             
-            // Model ekranını aç
+            // Senin minimalist ekranını açıyoruz
             viewerScreen.style.display = 'block';
         });
 
-        // --- 3. AR MODU BAŞLAYINCA BUTONLARI GİZLE ---
-        const viewer = document.querySelector("#ar-element");
+        // --- AR MODU KONTROLÜ ---
         viewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                hintText.style.display = 'none';
+                document.querySelector("#hint-text").style.display = 'none';
             } else if (event.detail.status === 'not-presenting') {
-                hintText.style.display = 'block';
+                document.querySelector("#hint-text").style.display = 'block';
             }
         });
     </script>
