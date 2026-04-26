@@ -6,58 +6,185 @@
     <title>Atatürk AR Sergi — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
+    
     <style>
-        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; }
-
-        /* BAŞLANGIÇ EKRANI (KAMERA İZNİ İÇİN ŞART) */
-        #splash {
-            position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
-            transition: opacity 0.5s ease;
-        }
-        .splash-name { color: white; font-size: 32px; text-align: center; margin-bottom: 30px; }
-        .s-btn {
-            padding: 15px 35px; background-color: #e63946; color: white;
-            border: none; border-radius: 50px; font-size: 16px; font-weight: bold;
-            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4); cursor: pointer;
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
         }
 
-        /* AR ARAYÜZÜ (KAMERA AÇIKKEN GÖRÜNEN KISIM) */
+        /* ── LOADING EKRANI ── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            transition: opacity 0.6s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #loading-screen h1 {
+            color: #fff;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin: 0 0 8px;
+            text-align: center;
+        }
+        #loading-screen p {
+            color: #aaa;
+            font-size: 13px;
+            margin: 0 0 30px;
+            text-align: center;
+        }
+        .loader-bar-wrap {
+            width: 200px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .loader-bar {
+            height: 100%;
+            background: #e63946;
+            border-radius: 2px;
+            animation: loadBar 2.5s ease-in-out infinite; /* Bekleme süresince animasyon devam eder */
+        }
+        @keyframes loadBar {
+            0%   { width: 0%; transform: translateX(-100%); }
+            100% { width: 100%; transform: translateX(100%); }
+        }
+
+        /* ── AR UI KATMANI ── */
         #ui-layer {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10; pointer-events: none;
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
+            z-index: 10;
+            pointer-events: none;
         }
+
+        #top-bar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+        }
+        #top-bar .brand {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            opacity: 0.95;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+        }
+
         #flash-btn {
-            position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.5); color: white;
-            border: 1px solid white; border-radius: 20px; padding: 10px 15px; font-size: 14px;
-            pointer-events: auto; cursor: pointer;
+            background: rgba(0, 0, 0, 0.45);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-radius: 20px;
+            padding: 9px 16px;
+            font-size: 13px;
+            pointer-events: auto;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            transition: background 0.25s, border-color 0.25s;
+            -webkit-backdrop-filter: blur(6px);
         }
+        #flash-btn.active {
+            background: rgba(230, 57, 70, 0.85);
+            border-color: #e63946;
+        }
+
         #scan-hint {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            background: rgba(230, 57, 70, 0.9); color: white; padding: 12px 25px;
-            border-radius: 30px; font-size: 14px; font-weight: bold; white-space: nowrap;
+            position: absolute;
+            bottom: 48px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(230, 57, 70, 0.92);
+            color: white;
+            padding: 13px 28px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(230, 57, 70, 0.45);
+            animation: pulse 2s ease-in-out infinite;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        #scan-hint.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            pointer-events: none;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(230,57,70,0.45); }
+            50%      { box-shadow: 0 4px 35px rgba(230,57,70,0.75); }
+        }
+
+        #target-found-msg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
             transition: opacity 0.3s;
         }
+        #target-found-msg.show {
+            opacity: 1;
+        }
 
-        .developer-note { position: absolute; bottom: 10px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 10px; }
         .a-enter-vr { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div id="splash">
-        <h1 class="splash-name">Atatürk AR Sergisi</h1>
-        <button class="s-btn" id="start-btn">📱 Kamerayı Başlat</button>
-        <div class="developer-note">Geliştirici: esmanur çaça</div>
+    <div id="loading-screen">
+        <h1 id="loading-title">⚡ Kamera Başlatılıyor...</h1>
+        <p id="loading-desc">Küçükçekmece Gençlik Merkezi</p>
+        <div class="loader-bar-wrap">
+            <div class="loader-bar"></div>
+        </div>
     </div>
 
-    <div id="ui-layer" style="display: none;">
-        <button id="flash-btn">💡 Işık</button>
+    <div id="ui-layer">
+        <div id="top-bar">
+            <span class="brand">🇹🇷 Atatürk AR Sergi</span>
+            <button id="flash-btn">💡 Işık</button>
+        </div>
         <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
+        <div id="target-found-msg">✅ Hedef Bulundu</div>
     </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        
+    <a-scene
+        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
+        color-space="sRGB"
+        renderer="colorManagement: true; physicallyCorrectLights: true;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+    >
         <a-assets>
             <a-asset-item id="ataturkModel" src="./3d.glb"></a-asset-item>
         </a-assets>
@@ -65,56 +192,85 @@
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
         <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
-            <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
-            <a-light type="directional" color="#FFF" intensity="1" position="1 2 1"></a-light>
-            
-            <a-gltf-model src="#ataturkModel" rotation="-90 0 0" position="0 0 0" scale="0.1 0.1 0.1" animation-mixer></a-gltf-model>
-        </a-entity>
+            <a-light type="ambient" color="#FFFFFF" intensity="1.2"></a-light>
+            <a-light type="directional" color="#FFFFFF" intensity="1.0" position="1 2 1"></a-light>
 
+            <a-gltf-model
+                id="ataturk-model"
+                src="#ataturkModel"
+                rotation="-90 0 0"
+                position="0 0 0"
+                scale="0.1 0.1 0.1"
+            ></a-gltf-model>
+        </a-entity>
     </a-scene>
 
     <script>
-        const splash = document.getElementById('splash');
-        const startBtn = document.getElementById('start-btn');
-        const uiLayer = document.getElementById('ui-layer');
-        const sceneEl = document.querySelector('a-scene');
-        const targetEntity = document.getElementById('target-entity');
-        const scanHint = document.getElementById('scan-hint');
-        const flashBtn = document.getElementById('flash-btn');
+        const loadingScreen   = document.getElementById('loading-screen');
+        const loadingTitle    = document.getElementById('loading-title');
+        const loadingDesc     = document.getElementById('loading-desc');
+        const targetEntity    = document.getElementById('target-entity');
+        const scanHint        = document.getElementById('scan-hint');
+        const flashBtn        = document.getElementById('flash-btn');
+        const targetFoundMsg  = document.getElementById('target-found-msg');
+        const sceneEl         = document.querySelector('a-scene');
 
-        // 1. KAMERAYI BAŞLAT
-        startBtn.addEventListener('click', () => {
-            splash.style.display = 'none';
-            uiLayer.style.display = 'block';
-            sceneEl.systems["mindar-image-system"].start();
+        // Geliştirme 1: Kamera fiziksel olarak AÇILDIĞINDA loading ekranını kapat
+        sceneEl.addEventListener('arReady', () => {
+            loadingScreen.classList.add('hidden');
         });
 
-        // 2. KARTVİZİT GÖRÜNÜNCE
+        // Geliştirme 2: Kullanıcı kameraya izin vermezse uyarı çıkar
+        sceneEl.addEventListener('arError', (event) => {
+            loadingTitle.innerText = "Kamera Hatası";
+            loadingDesc.innerText = "Lütfen tarayıcı ayarlarından kameraya izin verin.";
+            document.querySelector('.loader-bar-wrap').style.display = 'none';
+        });
+
+        /* ── HEDEF BULUNDU ── */
         targetEntity.addEventListener('targetFound', () => {
-            scanHint.style.display = 'none'; // Kartı buldu, uyarıyı gizle
+            scanHint.classList.add('hidden');
+            targetFoundMsg.classList.add('show');
+            setTimeout(() => targetFoundMsg.classList.remove('show'), 1800);
         });
 
-        // 3. KARTVİZİT KAMERADAN ÇIKINCA
+        /* ── HEDEF KAYBOLDU ── */
         targetEntity.addEventListener('targetLost', () => {
-            scanHint.style.display = 'block'; // Kartı kaybetti, uyarıyı tekrar göster
+            scanHint.classList.remove('hidden');
         });
 
-        // 4. FLAŞ (FENER) KONTROLÜ
+        /* ── FLAŞ (EL FENERİ) KONTROLÜ ── */
         let flashOn = false;
+
         flashBtn.addEventListener('click', async () => {
             const video = document.querySelector('video');
-            if (video && video.srcObject) {
-                const track = video.srcObject.getVideoTracks()[0];
-                const capabilities = track.getCapabilities();
-                if (capabilities.torch) {
-                    flashOn = !flashOn;
-                    try {
-                        await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-                        flashBtn.style.background = flashOn ? "rgba(230, 57, 70, 0.9)" : "rgba(0, 0, 0, 0.5)";
-                    } catch (err) { console.log(err); }
-                } else {
-                    alert("Cihazınız web üzerinden flaş desteği vermiyor.");
+
+            if (!video || !video.srcObject) {
+                alert("Kamera henüz başlamadı. Lütfen bekleyin.");
+                return;
+            }
+
+            const tracks = video.srcObject.getVideoTracks();
+            if (tracks.length === 0) {
+                alert("Video akışı bulunamadı.");
+                return;
+            }
+
+            const track = tracks[0];
+            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+
+            if (capabilities.torch) {
+                flashOn = !flashOn;
+                try {
+                    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+                    flashBtn.classList.toggle('active', flashOn);
+                    flashBtn.textContent = flashOn ? '🔦 Işık Açık' : '💡 Işık';
+                } catch (err) {
+                    console.error('Flaş hatası:', err);
+                    flashOn = !flashOn; // Hata verirse durumu geri al
                 }
+            } else {
+                alert("Cihazınız web üzerinden flaş desteği vermiyor.");
             }
         });
     </script>
