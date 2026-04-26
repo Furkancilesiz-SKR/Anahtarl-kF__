@@ -169,15 +169,13 @@
             <a-gltf-model
                 id="ataturk-model"
                 src="#ataturkModel"
-                
                 rotation="-90 0 0"
                 position="0 0.15 0"
-                
                 scale="0.001 0.001 0.001"
                 animation__appear="property: scale; from: 0.001 0.001 0.001; to: 0.08 0.08 0.08; dur: 600; easing: easeOutBack; startEvents: modelAppear;"
                 animation__disappear="property: scale; from: 0.08 0.08 0.08; to: 0.001 0.001 0.001; dur: 300; easing: easeInBack; startEvents: modelDisappear;"
             ></a-gltf-model>
-            </a-entity>
+        </a-entity>
     </a-scene>
 
     <script>
@@ -188,12 +186,12 @@
         const sceneEl = document.querySelector('a-scene');
         const model = document.getElementById('ataturk-model');
 
-        // Kamera Başarıyla Açılırsa
+        // 1. Kamera Başarıyla Açılırsa
         sceneEl.addEventListener('arReady', () => {
             loadingScreen.classList.add('hidden');
         });
 
-        // Kamera İzni Reddedilirse veya Hata Çıkarsa
+        // 2. Kamera İzni Reddedilirse veya Hata Çıkarsa (KRİTİK EKLENTİ)
         sceneEl.addEventListener('arError', () => {
             const loaderWrap = document.querySelector('.loader-bar-wrap');
             if(loaderWrap) loaderWrap.style.display = 'none';
@@ -202,19 +200,19 @@
             document.getElementById('loading-desc').innerText = "Lütfen tarayıcı ayarlarından kamera izni verip sayfayı yenileyin.";
         });
 
-        // Hedef (Kartvizit) Bulunduğunda
+        // 3. Hedef (Kartvizit) Bulunduğunda (Animasyon tetiklendi)
         targetEntity.addEventListener('targetFound', () => {
             scanHint.classList.add('hidden');
             model.emit('modelAppear');
         });
 
-        // Hedef (Kartvizit) Kaybolduğunda
+        // 4. Hedef (Kartvizit) Kaybolduğunda (Animasyon tetiklendi)
         targetEntity.addEventListener('targetLost', () => {
             scanHint.classList.remove('hidden');
             model.emit('modelDisappear');
         });
 
-        // Flaş Kontrolü
+        // 5. Flaş Kontrolü
         let flashOn = false;
         flashBtn.addEventListener('click', async () => {
             const video = document.querySelector('video');
