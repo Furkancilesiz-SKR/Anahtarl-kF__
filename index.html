@@ -3,27 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0a0a0a">
-    
     <title>Atatürk AR Sergi — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-
+    
     <style>
         * { box-sizing: border-box; }
-
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0a0a0a;
+            background-color: #0a0a0a;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* ─── LOADING ─── */
         #loading-screen {
             position: fixed;
             inset: 0;
@@ -32,355 +26,66 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 10px;
-            z-index: 200;
-            transition: opacity 0.7s ease;
+            z-index: 100;
+            transition: opacity 0.6s ease;
         }
         #loading-screen.hidden {
             opacity: 0;
             pointer-events: none;
         }
-        #loading-screen .flag { font-size: 48px; margin-bottom: 6px; }
         #loading-title {
             color: #fff;
-            font-size: 20px;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            margin: 0;
-            text-align: center;
-        }
-        #loading-desc {
-            color: #888;
-            font-size: 13px;
-            margin: 0 0 18px;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin: 0 0 8px;
             text-align: center;
         }
         .loader-bar-wrap {
-            width: 220px;
-            height: 3px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 3px;
+            width: 200px;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
             overflow: hidden;
         }
         .loader-bar {
             height: 100%;
-            width: 40%;
-            background: linear-gradient(90deg, transparent, #e63946, transparent);
-            border-radius: 3px;
-            animation: shimmer 1.4s ease-in-out infinite;
+            background: #e63946;
+            border-radius: 2px;
+            animation: loadBar 2.5s ease-in-out infinite;
         }
-        @keyframes shimmer {
-            0%   { transform: translateX(-200%); }
-            100% { transform: translateX(700%); }
-        }
-        #loading-status {
-            color: #555;
-            font-size: 11px;
-            margin-top: 14px;
-            letter-spacing: 0.3px;
+        @keyframes loadBar {
+            0%   { width: 0%; transform: translateX(-100%); }
+            100% { width: 100%; transform: translateX(100%); }
         }
 
-        /* ─── UI LAYER ─── */
         #ui-layer {
             position: absolute;
-            inset: 0;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
             z-index: 10;
             pointer-events: none;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
 
         #top-bar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 18px 20px 28px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
-            padding-top: max(18px, env(safe-area-inset-top)); 
+            padding: 16px 20px;
+            padding-top: max(16px, env(safe-area-inset-top)); 
+            background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
         }
-        .brand {
+        #top-bar .brand {
             color: #fff;
             font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.4px;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+            font-weight: 600;
+            opacity: 0.95;
         }
 
         #flash-btn {
-            pointer-events: auto;
-            cursor: pointer;
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.25);
-            border-radius: 22px;
-            padding: 9px 18px;
-            font-size: 13px;
-            font-family: inherit;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            transition: background 0.25s, border-color 0.25s, transform 0.1s;
-        }
-        #flash-btn:active  { transform: scale(0.95); }
-        #flash-btn.active  { background: rgba(230,57,70,0.85); border-color: #e63946; }
-
-        /* Tarama Çerçevesi ve İpuçları */
-        .scan-container {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-
-        #scan-frame {
-            position: absolute;
-            top: 45%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 220px;
-            height: 220px;
-            transition: opacity 0.4s;
-        }
-        #scan-frame.hidden { opacity: 0; }
-
-        #scan-line {
-            position: absolute;
-            top: 45%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 220px;
-            height: 2px;
-            background: linear-gradient(to right, transparent, #e63946, transparent);
-            animation: scanMove 2s ease-in-out infinite;
-            transition: opacity 0.4s;
-        }
-        #scan-line.hidden { opacity: 0; }
-        
-        @keyframes scanMove {
-            0%   { margin-top: -110px; opacity: 0; }
-            10%  { opacity: 1; }
-            90%  { opacity: 1; }
-            100% { margin-top: 110px; opacity: 0; }
-        }
-
-        #scan-hint {
-            position: absolute;
-            bottom: max(60px, env(safe-area-inset-bottom));
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(230,57,70,0.93);
-            color: #fff;
-            padding: 14px 30px;
-            border-radius: 32px;
-            font-size: 14px;
-            font-weight: 700;
-            white-space: nowrap;
-            box-shadow: 0 0 24px rgba(230,57,70,0.5);
-            animation: glow 2s ease-in-out infinite;
-            transition: opacity 0.35s, transform 0.35s;
-        }
-        #scan-hint.hidden {
-            opacity: 0;
-            transform: translateX(-50%) translateY(14px);
-        }
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 24px rgba(230,57,70,0.5); }
-            50%       { box-shadow: 0 0 40px rgba(230,57,70,0.85), 0 0 60px rgba(230,57,70,0.3); }
-        }
-
-        #target-found-msg {
-            position: absolute;
-            top: max(80px, calc(env(safe-area-inset-top) + 60px));
-            left: 50%;
-            transform: translateX(-50%) translateY(-10px);
-            background: rgba(16,185,129,0.92);
-            color: #fff;
-            padding: 10px 22px;
-            border-radius: 22px;
-            font-size: 13px;
-            font-weight: 700;
-            white-space: nowrap;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            opacity: 0;
-            transition: opacity 0.3s, transform 0.3s;
-        }
-        #target-found-msg.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* Geliştirici İmzası */
-        #dev-credit {
-            position: absolute;
-            bottom: max(15px, env(safe-area-inset-bottom));
-            width: 100%;
-            text-align: center;
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 10px;
-            letter-spacing: 1px;
-        }
-
-        .a-enter-vr { display: none !important; }
-    </style>
-</head>
-<body>
-
-    <div id="loading-screen">
-        <div class="flag">🇹🇷</div>
-        <h1 id="loading-title">AR Sergi Başlatılıyor</h1>
-        <p id="loading-desc">Küçükçekmece Gençlik Merkezi</p>
-        <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
-        <span id="loading-status">Kamera izni bekleniyor…</span>
-    </div>
-
-    <div id="ui-layer">
-        <div id="top-bar">
-            <span class="brand">🇹🇷 Atatürk AR Sergi</span>
-            <button id="flash-btn">💡 Işık</button>
-        </div>
-
-        <div class="scan-container">
-            <div id="scan-frame">
-                <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <g stroke="white" stroke-width="4" stroke-linecap="round" opacity="0.8">
-                        <path d="M10 50 L10 10 L50 10"/>
-                        <path d="M150 10 L190 10 L190 50"/>
-                        <path d="M10 150 L10 190 L50 190"/>
-                        <path d="M150 190 L190 190 L190 150"/>
-                    </g>
-                </svg>
-            </div>
-            <div id="scan-line"></div>
-        </div>
-
-        <div id="target-found-msg">✅ Hedef Bulundu!</div>
-        <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
-        <div id="dev-credit">Geliştirici: esmanur çaça</div>
-    </div>
-
-    <a-scene
-        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
-        color-space="sRGB"
-        renderer="colorManagement: true; physicallyCorrectLights: true;"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-    >
-        <a-assets timeout="20000">
-            <a-asset-item id="ataturkModel" src="./3d.glb"></a-asset-item>
-        </a-assets>
-
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
-            <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
-            <a-light type="directional" color="#ffe8d6" intensity="1.2" position="1 3 2"></a-light>
-            <a-light type="directional" color="#d0e8ff" intensity="0.5" position="-2 1 -1"></a-light>
-
-            <a-gltf-model
-                id="ataturk-model"
-                src="#ataturkModel"
-                rotation="-90 0 0"
-                position="-0.5 -0.5 0"
-                scale="0.001 0.001 0.001"
-                animation__appear="property: scale; from: 0.001 0.001 0.001; to: 0.15 0.15 0.15; dur: 600; easing: easeOutBack; startEvents: modelAppear;"
-                animation__disappear="property: scale; from: 0.15 0.15 0.15; to: 0.001 0.001 0.001; dur: 300; easing: easeInBack; startEvents: modelDisappear;"
-            ></a-gltf-model>
-        </a-entity>
-    </a-scene>
-
-    <script>
-        const loadingScreen  = document.getElementById('loading-screen');
-        const loadingTitle   = document.getElementById('loading-title');
-        const loadingDesc    = document.getElementById('loading-desc');
-        const loadingStatus  = document.getElementById('loading-status');
-        const targetEntity   = document.getElementById('target-entity');
-        const scanHint       = document.getElementById('scan-hint');
-        const scanFrame      = document.getElementById('scan-frame');
-        const scanLine       = document.getElementById('scan-line');
-        const flashBtn       = document.getElementById('flash-btn');
-        const targetFoundMsg = document.getElementById('target-found-msg');
-        const model          = document.getElementById('ataturk-model');
-        const sceneEl        = document.querySelector('a-scene');
-
-        let toastTimer  = null;
-
-        /* ── LOADING & KAMERA HAZIRLIK ── */
-        sceneEl.addEventListener('arReady', () => {
-            loadingScreen.classList.add('hidden');
-        });
-
-        sceneEl.addEventListener('loaded', () => {
-            loadingStatus.textContent = 'Hedef dosyası yükleniyor…';
-            setTimeout(() => loadingScreen.classList.add('hidden'), 8000);
-        });
-
-        sceneEl.addEventListener('arError', () => {
-            loadingTitle.textContent = '⚠️ Kamera Hatası';
-            loadingDesc.textContent  = 'Tarayıcı ayarlarından kamera iznini açın ve sayfayı yenileyin.';
-            loadingStatus.textContent = '';
-            document.querySelector('.loader-bar-wrap').style.display = 'none';
-        });
-
-        /* ── HEDEF BULUNDU ── */
-        targetEntity.addEventListener('targetFound', () => {
-            scanHint.classList.add('hidden');
-            scanFrame.classList.add('hidden');
-            scanLine.classList.add('hidden');
-
-            clearTimeout(toastTimer);
-            targetFoundMsg.classList.add('show');
-            toastTimer = setTimeout(() => targetFoundMsg.classList.remove('show'), 2000);
-
-            model.emit('modelAppear');
-        });
-
-        /* ── HEDEF KAYBOLDU ── */
-        targetEntity.addEventListener('targetLost', () => {
-            scanHint.classList.remove('hidden');
-            scanFrame.classList.remove('hidden');
-            scanLine.classList.remove('hidden');
-
-            model.emit('modelDisappear');
-        });
-
-        /* ── FLAŞ ── */
-        let flashOn = false;
-
-        flashBtn.addEventListener('click', async () => {
-            const video = document.querySelector('video');
-
-            if (!video || !video.srcObject) {
-                alert('Kamera henüz başlamadı, lütfen bekleyin.');
-                return;
-            }
-
-            const tracks = video.srcObject.getVideoTracks();
-            if (!tracks.length) {
-                alert('Video akışı bulunamadı.');
-                return;
-            }
-
-            const track = tracks[0];
-            const caps  = track.getCapabilities ? track.getCapabilities() : {};
-
-            if (!caps.torch) {
-                alert('Cihazınız web üzerinden flaş desteği vermiyor.');
-                return;
-            }
-
-            flashOn = !flashOn;
-            try {
-                await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-                flashBtn.classList.toggle('active', flashOn);
-                flashBtn.textContent = flashOn ? '🔦 Açık' : '💡 Işık';
-            } catch (err) {
-                console.error('Flaş hatası:', err);
-                flashOn = !flashOn;
-                alert('Flaş açılamadı: ' + err.message);
-            }
-        });
-    </script>
-</body>
-</html>
+            background: rgba(0, 0, 0, 0.45);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.35);
+            border-
