@@ -3,395 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Atatürk AR Sergisi — Küçükçekmece Gençlik Merkezi</title>
+    <title>Atatürk AR Sergi — Küçükçekmece Gençlik Merkezi</title>
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --cream: #f5f0e8;
-            --dark: #0d0d0d;
-            --red: #c0392b;
-            --red-light: #e74c3c;
-            --gold: #c9a84c;
-            --muted: rgba(245,240,232,0.5);
-            --glass: rgba(13,13,13,0.6);
-        }
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        html, body {
-            width: 100%; height: 100%;
-            overflow: hidden;
-            background: var(--dark);
-            font-family: 'DM Sans', sans-serif;
-        }
-
+        /* BAŞLANGIÇ EKRANI (KAMERA İZNİ İÇİN ŞART) */
         #splash {
-            position: fixed; inset: 0; z-index: 9000;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            background: var(--dark);
-            overflow: hidden;
+            position: fixed; inset: 0; z-index: 9000; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: radial-gradient(circle, #2c3e50 0%, #000000 100%);
+            transition: opacity 0.5s ease;
         }
-        #splash::before {
-            content: '';
-            position: absolute; inset: 0;
-            background-image:
-                radial-gradient(circle at 20% 20%, rgba(192,57,43,0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(201,168,76,0.1) 0%, transparent 50%);
+        .splash-name { color: white; font-size: 32px; text-align: center; margin-bottom: 30px; }
+        .s-btn {
+            padding: 15px 35px; background-color: #e63946; color: white;
+            border: none; border-radius: 50px; font-size: 16px; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.4); cursor: pointer;
         }
-        .stripe-top {
-            position: absolute; top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, var(--red), var(--gold), var(--red));
-        }
-        .logo-area {
-            position: relative; text-align: center; margin-bottom: 48px;
-            animation: fadeUp 0.8s ease both;
-        }
-        .logo-badge {
-            display: inline-flex; align-items: center; gap: 8px;
-            background: rgba(192,57,43,0.15);
-            border: 1px solid rgba(192,57,43,0.3);
-            border-radius: 30px;
-            padding: 6px 16px;
-            margin-bottom: 24px;
-        }
-        .logo-badge svg { width: 14px; height: 14px; }
-        .logo-badge span {
-            font-size: 10px; letter-spacing: 3px;
-            color: var(--red-light); text-transform: uppercase;
-        }
-        .splash-title {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(52px, 14vw, 88px);
-            font-weight: 700;
-            color: var(--cream);
-            line-height: 0.9;
-            letter-spacing: -2px;
-        }
-        .splash-title span {
-            display: block;
-            font-style: italic;
-            font-weight: 400;
-            color: var(--gold);
-            font-size: 0.52em;
-            letter-spacing: 6px;
-            margin-top: 14px;
-        }
-        .info-row {
-            display: flex; gap: 12px;
-            margin-bottom: 44px;
-            animation: fadeUp 0.8s 0.2s ease both;
-        }
-        .info-card {
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(245,240,232,0.05);
-            border: 1px solid rgba(245,240,232,0.1);
-            border-radius: 12px;
-            padding: 10px 16px;
-        }
-        .info-card svg { width: 16px; height: 16px; flex-shrink: 0; }
-        .info-card p { font-size: 11px; color: var(--muted); line-height: 1.4; }
-        .info-card strong { display: block; font-size: 12px; color: var(--cream); font-weight: 500; }
-        .start-btn {
-            position: relative;
-            display: flex; align-items: center; gap: 12px;
-            padding: 18px 40px;
-            background: var(--red);
-            color: var(--cream);
-            border: none; border-radius: 60px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 15px; font-weight: 500;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            animation: fadeUp 0.8s 0.35s ease both;
-            box-shadow: 0 8px 32px rgba(192,57,43,0.4);
-            overflow: hidden;
-        }
-        .start-btn::after {
-            content: '';
-            position: absolute; inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-            border-radius: inherit;
-        }
-        .start-btn:active { transform: scale(0.97); }
-        .start-btn svg { width: 20px; height: 20px; }
-        .dev-note {
-            position: absolute; bottom: 24px;
-            display: flex; align-items: center; gap: 6px;
-            font-size: 10px; letter-spacing: 2px;
-            color: rgba(245,240,232,0.25);
-            text-transform: uppercase;
-            animation: fadeUp 0.8s 0.5s ease both;
-        }
-        .dev-note svg { width: 12px; height: 12px; }
-        #splash.out { animation: splashOut 0.6s ease forwards; }
-        @keyframes splashOut { to { opacity: 0; transform: scale(1.03); visibility: hidden; } }
 
+        /* AR ARAYÜZÜ (KAMERA AÇIKKEN GÖRÜNEN KISIM) */
         #ui-layer {
-            position: fixed; inset: 0; z-index: 10;
-            pointer-events: none;
-            display: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100vh; z-index: 10; pointer-events: none;
         }
-        .top-bar {
-            position: absolute; top: 0; left: 0; right: 0;
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 16px 20px;
-            background: linear-gradient(to bottom, rgba(13,13,13,0.8), transparent);
+        #flash-btn {
+            position: absolute; top: 20px; right: 20px; background: rgba(0, 0, 0, 0.5); color: white;
+            border: 1px solid white; border-radius: 20px; padding: 10px 15px; font-size: 14px;
+            pointer-events: auto; cursor: pointer;
         }
-        .top-bar-title { display: flex; align-items: center; gap: 8px; }
-        .top-bar-title svg { width: 18px; height: 18px; }
-        .top-bar-title p {
-            font-family: 'Playfair Display', serif;
-            font-size: 16px; color: var(--cream); font-style: italic;
-        }
-        .action-btns { display: flex; gap: 10px; pointer-events: auto; }
-        .icon-btn {
-            width: 42px; height: 42px;
-            display: flex; align-items: center; justify-content: center;
-            background: var(--glass);
-            border: 1px solid rgba(245,240,232,0.15);
-            border-radius: 50%;
-            color: var(--cream);
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            transition: background 0.2s;
-        }
-        .icon-btn svg { width: 18px; height: 18px; }
-        .icon-btn:active { background: rgba(192,57,43,0.5); }
-        .icon-btn.active { background: rgba(192,57,43,0.7); border-color: var(--red); }
-
         #scan-hint {
-            position: absolute; bottom: 48px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 10px;
-            background: var(--glass);
-            border: 1px solid rgba(245,240,232,0.15);
-            border-radius: 50px;
-            padding: 12px 22px;
-            backdrop-filter: blur(10px);
-            white-space: nowrap;
-            pointer-events: none;
-            animation: pulse 2s ease-in-out infinite;
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            background: rgba(230, 57, 70, 0.9); color: white; padding: 12px 25px;
+            border-radius: 30px; font-size: 14px; font-weight: bold; white-space: nowrap;
+            transition: opacity 0.3s;
         }
-        #scan-hint svg { width: 16px; height: 16px; color: var(--red-light); }
-        #scan-hint span { font-size: 13px; color: var(--cream); }
 
-        #found-indicator {
-            position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 8px;
-            background: rgba(192,57,43,0.85);
-            border-radius: 30px;
-            padding: 8px 18px;
-            opacity: 0; transition: opacity 0.4s;
-            pointer-events: none; white-space: nowrap;
-        }
-        #found-indicator.visible { opacity: 1; }
-        #found-indicator svg { width: 14px; height: 14px; }
-        #found-indicator span { font-size: 11px; letter-spacing: 2px; color: white; text-transform: uppercase; font-weight: 500; }
-
-        .scan-frame {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -55%);
-            width: min(300px, 80vw);
-            height: min(300px, 80vw);
-            pointer-events: none;
-            opacity: 0.5; transition: opacity 0.5s;
-        }
-        .scan-frame.found { opacity: 0; }
-        .corner { position: absolute; width: 24px; height: 24px; border-color: var(--red-light); border-style: solid; }
-        .corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
-        .corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; border-radius: 0 4px 0 0; }
-        .corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; border-radius: 0 0 0 4px; }
-        .corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
-        .scan-line {
-            position: absolute; left: 10px; right: 10px; height: 1px;
-            background: linear-gradient(90deg, transparent, var(--red-light), transparent);
-            animation: scanLine 2s ease-in-out infinite; top: 0;
-        }
-        @keyframes scanLine {
-            0%, 100% { top: 10px; opacity: 0; }
-            10% { opacity: 1; } 90% { opacity: 1; }
-            95% { top: calc(100% - 10px); opacity: 0; }
-        }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .a-enter-vr, .a-loader-title { display: none !important; }
+        .developer-note { position: absolute; bottom: 10px; width: 100%; text-align: center; color: rgba(255,255,255,0.5); font-size: 10px; }
+        .a-enter-vr { display: none !important; }
     </style>
 </head>
 <body>
 
-<div id="splash">
-    <div class="stripe-top"></div>
-    <div class="logo-area">
-        <div class="logo-badge">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--red-light)">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                <circle cx="12" cy="9" r="2.5"/>
-            </svg>
-            <span>Küçükçekmece Gençlik Merkezi</span>
-        </div>
-        <h1 class="splash-title">
-            Atatürk
-            <span>Temsili Canlandırma </span>
-        </h1>
+    <div id="splash">
+        <h1 class="splash-name">Atatürk AR Sergisi</h1>
+        <button class="s-btn" id="start-btn">📱 Kamerayı Başlat</button>
+        <div class="developer-note">Geliştirici: esmanur çaça</div>
     </div>
-    <div class="info-row">
-        <div class="info-card">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gold)">
-                <path d="M2 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M22 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3"/>
-                <rect x="8" y="8" width="8" height="8" rx="1"/>
-            </svg>
-            <p><strong>Artırılmış Gerçeklik</strong>3D model deneyimi</p>
-        </div>
-        <div class="info-card">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="color:var(--gold)">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-            </svg>
-            <p><strong>Kamera Gerekli</strong>İzin ver ve başlat</p>
-        </div>
+
+    <div id="ui-layer" style="display: none;">
+        <button id="flash-btn">💡 Işık</button>
+        <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
     </div>
-    <button class="start-btn" id="start-btn">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-        Deneyimi Başlat
-    </button>
-    <div class="dev-note">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
-        </svg>
-        Geliştirici: Bilişim Grubu
-    </div>
-</div>
 
-<div id="ui-layer">
-    <div class="top-bar">
-        <div class="top-bar-title">
-            <svg viewBox="0 0 24 24" fill="var(--gold)" stroke="none">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-            </svg>
-            <p>Atatürk AR</p>
-        </div>
-        <div class="action-btns">
-            <button class="icon-btn" id="flash-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-                </svg>
-            </button>
-            <button class="icon-btn" id="info-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-            </button>
-        </div>
-    </div>
-    <div class="scan-frame" id="scan-frame">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
-        <div class="scan-line"></div>
-    </div>
-    <div id="found-indicator">
-        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-        </svg>
-        <span>Atatürk Algılandı</span>
-    </div>
-    <div id="scan-hint">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 1h6M1 1v6M23 1h-6M23 1v6M1 23h6M1 23v-6M23 23h-6M23 23v-6"/>
-        </svg>
-        <span>Kartı kameraya tut</span>
-    </div>
-</div>
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <a-asset-item id="ataturkModel" src="./3d.glb"></a-asset-item>
+        </a-assets>
 
-<a-scene
-    id="ar-scene"
-    mindar-image="imageTargetSrc: ./targets.mind; filterMinCF: 0.001; filterBeta: 0.001; uiLoading: no; uiError: no; uiScanning: no;"
-    color-space="sRGB"
-    renderer="colorManagement: true; physicallyCorrectLights: true;"
-    vr-mode-ui="enabled: false"
-    device-orientation-permission-ui="enabled: false"
-    style="display:none;"
->
-    <a-assets>
-        <a-asset-item id="ataturkModel" src="./3d.glb"></a-asset-item>
-    </a-assets>
-    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-    <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
-        <a-light type="ambient" color="#FFF5E0" intensity="1.5"></a-light>
-        <a-light type="directional" color="#FFFFFF" intensity="1.2" position="1 2 1"></a-light>
-        <a-gltf-model
-            src="#ataturkModel"
-            rotation="0 0 0"
-            position="0 0 0"
-            scale="0.1 0.1 0.1"
-            animation-mixer="loop: repeat"
-        ></a-gltf-model>
-    </a-entity>
-</a-scene>
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-<script>
-    const splash       = document.getElementById('splash');
-    const startBtn     = document.getElementById('start-btn');
-    const uiLayer      = document.getElementById('ui-layer');
-    const sceneEl      = document.getElementById('ar-scene');
-    const targetEntity = document.getElementById('target-entity');
-    const scanHint     = document.getElementById('scan-hint');
-    const scanFrame    = document.getElementById('scan-frame');
-    const foundInd     = document.getElementById('found-indicator');
-    const flashBtn     = document.getElementById('flash-btn');
-    const infoBtn      = document.getElementById('info-btn');
+        <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
+            <a-light type="ambient" color="#FFF" intensity="1.2"></a-light>
+            <a-light type="directional" color="#FFF" intensity="1" position="1 2 1"></a-light>
+            
+            <a-gltf-model src="#ataturkModel" rotation="-90 0 0" position="0 0 0" scale="0.1 0.1 0.1" animation-mixer></a-gltf-model>
+        </a-entity>
 
-    startBtn.addEventListener('click', () => {
-        splash.classList.add('out');
-        setTimeout(() => splash.style.display = 'none', 650);
-        uiLayer.style.display = 'block';
-        sceneEl.style.display = 'block';
-    });
+    </a-scene>
 
-    targetEntity.addEventListener('targetFound', () => {
-        scanHint.style.display = 'none';
-        scanFrame.classList.add('found');
-        foundInd.classList.add('visible');
-        setTimeout(() => foundInd.classList.remove('visible'), 2500);
-    });
+    <script>
+        const splash = document.getElementById('splash');
+        const startBtn = document.getElementById('start-btn');
+        const uiLayer = document.getElementById('ui-layer');
+        const sceneEl = document.querySelector('a-scene');
+        const targetEntity = document.getElementById('target-entity');
+        const scanHint = document.getElementById('scan-hint');
+        const flashBtn = document.getElementById('flash-btn');
 
-    targetEntity.addEventListener('targetLost', () => {
-        scanHint.style.display = 'flex';
-        scanFrame.classList.remove('found');
-    });
+        // 1. KAMERAYI BAŞLAT
+        startBtn.addEventListener('click', () => {
+            splash.style.display = 'none';
+            uiLayer.style.display = 'block';
+            sceneEl.systems["mindar-image-system"].start();
+        });
 
-    let flashOn = false;
-    flashBtn.addEventListener('click', async () => {
-        const video = document.querySelector('video');
-        if (video && video.srcObject) {
-            const track = video.srcObject.getVideoTracks()[0];
-            const cap = track.getCapabilities();
-            if (cap.torch) {
-                flashOn = !flashOn;
-                try {
-                    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
-                    flashBtn.classList.toggle('active', flashOn);
-                } catch(e) {}
-            } else {
-                alert('Bu cihaz fener özelliğini desteklemiyor.');
+        // 2. KARTVİZİT GÖRÜNÜNCE
+        targetEntity.addEventListener('targetFound', () => {
+            scanHint.style.display = 'none'; // Kartı buldu, uyarıyı gizle
+        });
+
+        // 3. KARTVİZİT KAMERADAN ÇIKINCA
+        targetEntity.addEventListener('targetLost', () => {
+            scanHint.style.display = 'block'; // Kartı kaybetti, uyarıyı tekrar göster
+        });
+
+        // 4. FLAŞ (FENER) KONTROLÜ
+        let flashOn = false;
+        flashBtn.addEventListener('click', async () => {
+            const video = document.querySelector('video');
+            if (video && video.srcObject) {
+                const track = video.srcObject.getVideoTracks()[0];
+                const capabilities = track.getCapabilities();
+                if (capabilities.torch) {
+                    flashOn = !flashOn;
+                    try {
+                        await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+                        flashBtn.style.background = flashOn ? "rgba(230, 57, 70, 0.9)" : "rgba(0, 0, 0, 0.5)";
+                    } catch (err) { console.log(err); }
+                } else {
+                    alert("Cihazınız web üzerinden flaş desteği vermiyor.");
+                }
             }
-        }
-    });
-
-    infoBtn.addEventListener('click', () => {
-        alert('Atatürk AR Sergisi\nKüçükçekmece Gençlik Merkezi\n\nSergi kartını kameraya tutarak 3D Atatürk modelini görüntüleyebilirsiniz.');
-    });
-</script>
-
+        });
+    </script>
 </body>
 </html>
