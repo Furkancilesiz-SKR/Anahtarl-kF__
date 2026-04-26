@@ -19,7 +19,6 @@
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #0a0a0a;
-            /* Dokunmatik ekranda metin seçimini ve gereksiz yakınlaştırmayı engeller */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -98,7 +97,6 @@
             justify-content: space-between;
             padding: 18px 20px 28px;
             background: linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, transparent 100%);
-            /* Çentikli ekranlar için güvenli alan */
             padding-top: max(18px, env(safe-area-inset-top)); 
         }
         .brand {
@@ -259,7 +257,7 @@
 
         <div id="target-found-msg">✅ Hedef Bulundu!</div>
         <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
-        <div id="dev-credit">Geliştirici: Esmanur Çaça</div>
+        <div id="dev-credit">Geliştirici: esmanur çaça</div>
     </div>
 
     <a-scene
@@ -284,7 +282,7 @@
                 id="ataturk-model"
                 src="#ataturkModel"
                 rotation="-90 0 0"
-                position="0 0.05 0"
+                position="-0.5 -0.5 0"
                 scale="0.001 0.001 0.001"
                 animation__appear="property: scale; from: 0.001 0.001 0.001; to: 0.15 0.15 0.15; dur: 600; easing: easeOutBack; startEvents: modelAppear;"
                 animation__disappear="property: scale; from: 0.15 0.15 0.15; to: 0.001 0.001 0.001; dur: 300; easing: easeInBack; startEvents: modelDisappear;"
