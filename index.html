@@ -88,4 +88,152 @@
             background: rgba(0, 0, 0, 0.45);
             color: white;
             border: 1px solid rgba(255,255,255,0.35);
-            border-
+            border-radius: 20px;
+            padding: 9px 16px;
+            font-size: 13px;
+            pointer-events: auto;
+            cursor: pointer;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            transition: 0.3s;
+        }
+
+        #scan-hint {
+            position: absolute;
+            bottom: max(48px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(230, 57, 70, 0.92);
+            color: white;
+            padding: 13px 28px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(230, 57, 70, 0.45);
+            transition: opacity 0.3s;
+        }
+        #scan-hint.hidden {
+            opacity: 0;
+        }
+
+        #dev-credit {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 10px;
+            letter-spacing: 1px;
+        }
+
+        .a-enter-vr { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <h1 id="loading-title">🇹🇷 Atatürk AR Sergi</h1>
+        <div class="loader-bar-wrap">
+            <div class="loader-bar"></div>
+        </div>
+        <p id="loading-desc" style="color: #888; margin-top: 15px; font-size: 12px;">Kamera Başlatılıyor...</p>
+    </div>
+
+    <div id="ui-layer">
+        <div id="top-bar">
+            <span class="brand">Küçükçekmece Gençlik Merkezi</span>
+            <button id="flash-btn">💡 Işık</button>
+        </div>
+        <div id="scan-hint">📷 Kamerayı Kartvizite Tutun</div>
+        <div id="dev-credit">Geliştirici: Esmanur Çaça</div>
+    </div>
+
+    <a-scene
+        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;"
+        color-space="sRGB"
+        renderer="colorManagement: true; physicallyCorrectLights: true;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+    >
+        <a-assets>
+            <a-asset-item id="ataturkModel" src="./mustafakemal.glb"></a-asset-item>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0" id="target-entity">
+            <a-light type="ambient" color="#FFFFFF" intensity="1.2"></a-light>
+            <a-light type="directional" color="#FFFFFF" intensity="1.0" position="1 2 1"></a-light>
+
+            <a-gltf-model
+                id="ataturk-model"
+                src="#ataturkModel"
+                rotation="-90 0 0"
+                position="0 0.15 0"
+                scale="0.001 0.001 0.001"
+                animation__appear="property: scale; from: 0.001 0.001 0.001; to: 0.08 0.08 0.08; dur: 600; easing: easeOutBack; startEvents: modelAppear;"
+                animation__disappear="property: scale; from: 0.08 0.08 0.08; to: 0.001 0.001 0.001; dur: 300; easing: easeInBack; startEvents: modelDisappear;"
+            ></a-gltf-model>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        const loadingScreen = document.getElementById('loading-screen');
+        const targetEntity = document.getElementById('target-entity');
+        const scanHint = document.getElementById('scan-hint');
+        const flashBtn = document.getElementById('flash-btn');
+        const sceneEl = document.querySelector('a-scene');
+        const model = document.getElementById('ataturk-model');
+
+        // 1. Kamera Başarıyla Açılırsa
+        sceneEl.addEventListener('arReady', () => {
+            loadingScreen.classList.add('hidden');
+        });
+
+        // 2. Kamera İzni Reddedilirse veya Hata Çıkarsa (KRİTİK EKLENTİ)
+        sceneEl.addEventListener('arError', () => {
+            const loaderWrap = document.querySelector('.loader-bar-wrap');
+            if(loaderWrap) loaderWrap.style.display = 'none';
+            
+            document.getElementById('loading-title').innerText = "⚠️ Kamera Hatası";
+            document.getElementById('loading-desc').innerText = "Lütfen tarayıcı ayarlarından kamera izni verip sayfayı yenileyin.";
+        });
+
+        // 3. Hedef (Kartvizit) Bulunduğunda (Animasyon tetiklendi)
+        targetEntity.addEventListener('targetFound', () => {
+            scanHint.classList.add('hidden');
+            model.emit('modelAppear');
+        });
+
+        // 4. Hedef (Kartvizit) Kaybolduğunda (Animasyon tetiklendi)
+        targetEntity.addEventListener('targetLost', () => {
+            scanHint.classList.remove('hidden');
+            model.emit('modelDisappear');
+        });
+
+        // 5. Flaş Kontrolü
+        let flashOn = false;
+        flashBtn.addEventListener('click', async () => {
+            const video = document.querySelector('video');
+            if (!video || !video.srcObject) return;
+
+            const track = video.srcObject.getVideoTracks()[0];
+            const capabilities = track.getCapabilities ? track.getCapabilities() : {};
+
+            if (capabilities.torch) {
+                flashOn = !flashOn;
+                try {
+                    await track.applyConstraints({ advanced: [{ torch: flashOn }] });
+                    flashBtn.textContent = flashOn ? '🔦 Işık Açık' : '💡 Işık';
+                    flashBtn.style.background = flashOn ? 'rgba(230, 57, 70, 0.85)' : 'rgba(0, 0, 0, 0.45)';
+                } catch (err) {
+                    console.error('Flaş hatası:', err);
+                }
+            } else {
+                alert("Cihazınızda flaş desteği bulunamadı.");
+            }
+        });
+    </script>
+</body>
+</html>
